@@ -3,10 +3,6 @@ const pool = require("./pool");
 
 const SALT_ROUNDS = 8;
 
-const resetDatabase = async () => {
-  await pool.query(`DROP SCHEMA public CASCADE`);
-  await pool.query(`CREATE SCHEMA public`);
-};
 const seed = async () => {
   await pool.query("DROP TABLE IF EXISTS rsvps");
 
