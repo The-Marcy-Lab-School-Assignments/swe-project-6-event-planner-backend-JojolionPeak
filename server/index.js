@@ -21,12 +21,17 @@ const {
   deleteUser,
 } = require("./controllers/userControllers");
 const {
-  listBookmarks,
-  listUserBookmarks,
-  createBookmark,
-  updateBookmark,
-  deleteBookmark,
-} = require("./controllers/bookmarkControllers"); // NEW
+  listEvents,
+  listUserEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+} = require("./controllers/eventControllers"); // NEW
+const {
+  listRsvps,
+  addRsvp,
+  deleteRsvp,
+} = require("./controllers/rsvpControllers");
 
 const app = express();
 
@@ -67,20 +72,25 @@ app.delete("/api/auth/logout", logout);
 // ====================================
 
 app.get("/api/users", listUsers);
-app.get("/api/users/:user_id/events", listUserEvents); // NEW: returns bookmarks for one user
+// app.get("/api/users/:user_id/events", listUserEvents); // NEW: returns events for one user
 app.patch("/api/users/:user_id", checkAuthentication, updateUser);
 app.delete("/api/users/:user_id", checkAuthentication, deleteUser);
 
 // ====================================
-// Bookmark routes — NEW
+// Event routes — NEW
 // ====================================
 
 // Public feed — no authentication required
-app.get("/api/bookmarks", listBookmarks);
-// Write routes require a valid session
-app.post("/api/bookmarks", checkAuthentication, createBookmark);
-app.patch("/api/bookmarks/:bookmark_id", checkAuthentication, updateBookmark);
-app.delete("/api/bookmarks/:bookmark_id", checkAuthentication, deleteBookmark);
+app.get("/api/events", listEvents);
+// // Write routes require a valid session
+app.post("/api/events", checkAuthentication, createEvent);
+app.patch("/api/events/:event_id", checkAuthentication, updateEvent);
+app.delete("/api/events/:event_id", checkAuthentication, deleteEvent);
+app.get("/api/users/:user_id/events", checkAuthentication, listUserEvents);
+
+app.post("/api/events/:event_id/rsvps", checkAuthentication, addRsvp);
+app.get("/api/users/:user_id/rsvps", listRsvps);
+app.delete("/api/events/:event_id/rsvps", deleteRsvp);
 
 // ====================================
 // Global Error Handling

@@ -18,7 +18,7 @@ const register = async (req, res, next) => {
     const user = await userModel.create(username, password);
 
     // Start a session — the user is now logged in
-    req.session.userId = user.user_id;
+    req.session.user_id = user.user_id;
 
     res.status(201).send(user);
   } catch (err) {
@@ -40,7 +40,7 @@ const login = async (req, res, next) => {
     }
 
     // Credentials are valid — start a session
-    req.session.userId = user.user_id;
+    req.session.user_id = user.user_id;
 
     res.status(200).send(user);
   } catch (err) {
@@ -51,25 +51,29 @@ const login = async (req, res, next) => {
 // GET /api/auth/me
 const getMe = async (req, res, next) => {
   try {
-    const { userId } = req.session;
+    const { user_id } = req.session;
 
     // No session — user is not logged in
-    if (!userId) return res.status(401).send(null);
+    if (!user_id) return res.status(401).send(null);
 
     // Session exists — look up and return the user
-    const user = await userModel.find(userId);
+    const user = await userModel.find(user_id);
     if (!user) return res.status(401).send(null);
 
-    res.status(201).send(user);
+    res.status(200).send(user);
   } catch (err) {
     next(err);
   }
 };
 
 // DELETE /api/auth/logout
-const logout = (req, res) => {
-  req.session = null; // tells cookie-session to delete the cookie
-  res.status(201).send({ message: "Logged out" });
+const logout = async (req, res, next) => {
+  try {
+    req.session = null; //
+    res.status(200).send({ message: "Logged out" });
+  } catch (err) {
+    next(err);
+  }
 };
 
 module.exports = { register, login, getMe, logout };

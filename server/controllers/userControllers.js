@@ -1,0 +1,54 @@
+const userModel = require("../models/userModel");
+
+// GET /api/users
+const listUsers = async (req, res, next) => {
+  try {
+    const users = await userModel.list();
+    res.send(users);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PATCH /api/users/:user_id { password }
+const updateUser = async (req, res, next) => {
+  try {
+    const user_id = Number(req.params.user_id);
+
+    // The user_id is in the URL, so we can compare it directly to req.session.user_id
+    if (user_id !== req.session.user_id) {
+      return res
+        .status(403)
+        .send({ message: "You can only update your own account." });
+    }
+
+    const { password } = req.body;
+    const user = await userModel.update(user_id, password);
+    if (!user) return res.status(404).send({ message: "User not found" });
+    res.send(user);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/users/:user_id
+const deleteUser = async (req, res, next) => {
+  try {
+    const user_id = Number(req.params.user_id);
+
+    // The user_id is in the URL, so we can compare it directly to req.session.user_id
+    if (user_id !== req.session.user_id) {
+      return res
+        .status(403)
+        .send({ message: "You can only delete your own account." });
+    }
+
+    const user = await userModel.destroy(user_id);
+    if (!user) return res.status(404).send({ message: "User not found" });
+    res.send(user);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { listUsers, updateUser, deleteUser };

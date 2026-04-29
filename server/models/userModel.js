@@ -38,7 +38,8 @@ module.exports.create = async (username, password) => {
 // Returns { user_id, username } if credentials match — never exposes password
 // Returns null if not found or password doesn't match
 module.exports.validatePassword = async (username, password) => {
-  const query = "SELECT user_id, username FROM users WHERE username = $1";
+  const query =
+    "SELECT user_id, username, password_hash FROM users WHERE username = $1";
   const { rows } = await pool.query(query, [username]);
   const user = rows[0];
   if (!user) return null;
@@ -53,8 +54,8 @@ module.exports.validatePassword = async (username, password) => {
 module.exports.update = async (user_id, password) => {
   const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
   const query =
-    "UPDATE users SET password_hash = $1 WHERE user_id = $2 RETURNING user_id, username";
-  const { rows } = await pool.query(query, [password_hash, user_id]);
+    "UPDATE users SET password_hash = COALESCE($2, password_hash) WHERE user_id = $1 RETURNING user_id, username";
+  const { rows } = await pool.query(query, [user_id, password_hash]);
   return rows[0] || null;
 };
 

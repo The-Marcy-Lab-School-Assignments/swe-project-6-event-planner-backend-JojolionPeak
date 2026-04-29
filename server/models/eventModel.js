@@ -5,10 +5,12 @@ const pool = require("../db/pool");
 // The JOIN is what makes the public feed possible — without it we'd only have user_id.
 module.exports.list = async () => {
   const query = `
-    SELECT events.event_id, events.title, events.url, events.user_id, users.username
-    FROM events
-    JOIN users ON events.user_id = users.user_id
-    ORDER BY events.event_id
+    SELECT events.event_id, title, description, date, location, event_type, max_capacity, events.user_id, users.username, COUNT(rsvp_id) AS rsvp_count
+      FROM events
+	      JOIN users ON users.user_id = events.user_id
+	      LEFT JOIN rsvps ON rsvps.event_id = events.event_id
+    GROUP BY events.event_id, users.username
+    ORDER BY date DESC;
   `;
   const { rows } = await pool.query(query);
   return rows;
@@ -17,23 +19,42 @@ module.exports.list = async () => {
 // Returns all events for a specific user
 module.exports.listByUser = async (user_id) => {
   const query = `
-    SELECT event_id, title, url, user_id
-    FROM events
-    WHERE user_id = $1
-    ORDER BY event_id
+    SELECT events.event_id, title, description, date, location, event_type, max_capacity, events.user_id, COUNT(rsvp_id) AS rsvp_count
+      FROM events
+	      JOIN users ON users.user_id = events.user_id
+	      LEFT JOIN rsvps ON rsvps.event_id = events.event_id
+    WHERE users.user_id = $1
+    GROUP BY events.event_id
+    ORDER BY date DESC;
   `;
   const { rows } = await pool.query(query, [user_id]);
   return rows;
 };
 
 // Creates a event owned by the user
-module.exports.create = async (user_id, title, url) => {
+module.exports.create = async (
+  title,
+  description,
+  date,
+  location,
+  event_type,
+  max_capacity,
+  user_id
+) => {
   const query = `
-    INSERT INTO events (user_id, title, url)
-    VALUES ($1, $2, $3)
-    RETURNING event_id, title, url, user_id
+    INSERT INTO events (title, description, date, location, event_type, max_capacity, user_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *
   `;
-  const { rows } = await pool.query(query, [user_id, title, url]);
+  const { rows } = await pool.query(query, [
+    title,
+    description,
+    date,
+    location,
+    event_type,
+    max_capacity,
+    user_id,
+  ]);
   return rows[0];
 };
 
@@ -41,21 +62,41 @@ module.exports.create = async (user_id, title, url) => {
 // ownership checks. Unlike users, the event URL only contains event_id, not user_id,
 // so we have to look up the owner from the database rather than the URL params.
 module.exports.find = async (event_id) => {
-  const query =
-    "SELECT event_id, title, url, user_id FROM events WHERE event_id = $1";
+  const query = "SELECT * FROM events WHERE event_id = $1";
   const { rows } = await pool.query(query, [event_id]);
   return rows[0] || null;
 };
 
 // Updates a event's title and url
-module.exports.update = async (event_id, title, url) => {
+module.exports.update = async (
+  event_id,
+  title,
+  description,
+  date,
+  location,
+  event_type,
+  max_capacity
+) => {
   const query = `
     UPDATE events
-    SET title = $1, url = $2
-    WHERE event_id = $3
-    RETURNING event_id, title, url, user_id
+    SET title = COALESCE($2, title),
+    description = COALESCE($3, description),
+    date = COALESCE($4, date),
+    location = COALESCE($5, location),
+    event_type = COALESCE($6, event_type),
+    max_capacity = COALESCE($7, max_capacity)
+    WHERE event_id = $1
+    RETURNING title, description, date, location, event_type, max_capacity
   `;
-  const { rows } = await pool.query(query, [title, url, event_id]);
+  const { rows } = await pool.query(query, [
+    event_id,
+    title,
+    description,
+    date,
+    location,
+    event_type,
+    max_capacity,
+  ]);
   return rows[0] || null;
 };
 
@@ -64,7 +105,7 @@ module.exports.destroy = async (event_id) => {
   const query = `
     DELETE FROM events
     WHERE event_id = $1
-    RETURNING event_id, title, url, user_id
+    RETURNING *
   `;
   const { rows } = await pool.query(query, [event_id]);
   return rows[0] || null;
