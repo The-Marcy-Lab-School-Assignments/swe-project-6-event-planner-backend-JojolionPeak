@@ -65,5 +65,5 @@ module.exports.destroy = async (user_id) => {
   const query =
     "DELETE FROM users WHERE user_id = $1 RETURNING user_id, username";
   const { rows } = await pool.query(query, [user_id]);
-  return rows[0] || null;
+  return !rows[0] ? null : rows[0];
 };

@@ -72,7 +72,7 @@ app.delete("/api/auth/logout", logout);
 // ====================================
 
 app.get("/api/users", listUsers);
-// app.get("/api/users/:user_id/events", listUserEvents); // NEW: returns events for one user
+app.get("/api/users/:user_id/events", listUserEvents); // NEW: returns events for one user
 app.patch("/api/users/:user_id", checkAuthentication, updateUser);
 app.delete("/api/users/:user_id", checkAuthentication, deleteUser);
 
@@ -90,7 +90,7 @@ app.get("/api/users/:user_id/events", checkAuthentication, listUserEvents);
 
 app.post("/api/events/:event_id/rsvps", checkAuthentication, addRsvp);
 app.get("/api/users/:user_id/rsvps", listRsvps);
-app.delete("/api/events/:event_id/rsvps", deleteRsvp);
+app.delete("/api/events/:event_id/rsvps", checkAuthentication, deleteRsvp);
 
 // ====================================
 // Global Error Handling

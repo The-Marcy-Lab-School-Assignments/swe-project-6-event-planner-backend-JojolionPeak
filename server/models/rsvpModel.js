@@ -2,7 +2,11 @@ const pool = require("../db/pool");
 
 module.exports.list = async (user_id) => {
   const query = `
-    SELECT events.event_id, events.title, events.description, events.date, events.location, event_type, events.max_capacity, events.user_id, COUNT(rsvp_id) AS rsvp_count
+    SELECT events.event_id, events.title, events.description, events.date, events.location, event_type, events.max_capacity, events.user_id, (
+      SELECT COUNT(rsvp_id)
+      FROM rsvps
+      WHERE rsvps.event_id = events.event_id
+    ) AS rsvp_count
       FROM rsvps
 	      JOIN users ON users.user_id = rsvps.user_id
 	      JOIN events ON events.event_id = rsvps.event_id

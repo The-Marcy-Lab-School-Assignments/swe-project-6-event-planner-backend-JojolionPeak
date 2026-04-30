@@ -1,7 +1,7 @@
 // middleware/checkAuthentication.js
-const checkAuthentication = async (req, res, next) => {
+const checkAuthentication = (req, res, next) => {
   // No session: user is not logged in, cut off the request before continuing to the controller
-  const user_id = await req.session.user_id;
+  const user_id = req.session.user_id;
   if (!user_id) {
     return res
       .status(401)

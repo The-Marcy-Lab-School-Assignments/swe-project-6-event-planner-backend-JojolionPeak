@@ -23,9 +23,12 @@ const updateUser = async (req, res, next) => {
     }
 
     const { password } = req.body;
+    if (!password) {
+      return res.status(400).send({ message: "Fill all required fields!" });
+    }
     const user = await userModel.update(user_id, password);
     if (!user) return res.status(404).send({ message: "User not found" });
-    res.send(user);
+    res.status(200).send(user);
   } catch (err) {
     next(err);
   }
