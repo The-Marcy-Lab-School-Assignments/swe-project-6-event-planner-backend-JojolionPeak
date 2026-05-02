@@ -36,7 +36,7 @@ const {
 const app = express();
 
 // ✍️ TODO 2: Replace hard-coded PORT with `process.env.PORT || 8080`
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 const pathToFrontend =
   process.env.NODE_ENV === "production" ? "../frontend/dist" : "../frontend";
