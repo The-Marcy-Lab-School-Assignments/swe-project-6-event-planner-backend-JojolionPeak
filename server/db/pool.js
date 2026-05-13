@@ -1,21 +1,22 @@
-require("dotenv").config();
 const { Pool } = require("pg");
+require("dotenv").config();
 
-// 2. Replace hard-coded values with `process.env`
-const devConfig = {
-  host: process.env.PGHOST,
-  port: process.env.PGPORT,
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-};
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+});
 
-const prodConfig = {
-  connectionString: process.env.PG_CONNECTION_STRING,
-};
-
-const pool = new Pool(
-  process.env.PG_CONNECTION_STRING ? prodConfig : devConfig
-);
+// Surface connection errors immediately rather than silently failing on first query
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error("❌  Failed to connect to PostgreSQL:", err.message);
+    process.exit(1);
+  }
+  console.log("✅  Connected to PostgreSQL:", process.env.DB_NAME);
+  release();
+});
 
 module.exports = pool;
